@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import string
-from pyvi import ViTokenizer
 from gensim.models.fasttext import FastText
 from gensim.models import Word2Vec
 from config import training_word2vec

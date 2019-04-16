@@ -1,5 +1,7 @@
 import config 
 import emoji, re
+import csv
+
 from accent_restoration import accent_pipeline
 from underthesea import word_tokenize
 from langdetect import detect 
@@ -23,10 +25,13 @@ def remove_exception(context):
 # [teen_word,correct_word]
 def change_teen_code(content):
     # Read teen code vocabulary 
-    lst_teen_code = None 
-    with open(config.preprocessing.teen_code_file,"r") as f:
-        lst_teen_code = f.read().split("\n")
-    lst_teen_code = [" {} ".format(y.strip()) for x in lst_teen_code for y in x.split(",") if y != ""]
+    lst_teen_code = [] 
+    with open(config.preprocessing.teen_code_file) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';')
+        for row in csv_reader:
+            lst_teen_code.append(" {} ".format(row[0]))
+            lst_teen_code.append(" {} ".format(row[1].split("+")[0]))
+
     if len(lst_teen_code) % 2 != 0:
         # Remove the last word.
         lst_teen_code = lst_teen_code[:-1]
@@ -84,24 +89,33 @@ def remove_other_language(content):
 
 
 if __name__ == "__main__":
-    input = "./data/data_ver02.txt"
-    output = "./data/data_ver03.txt"
+    input = "./data/data_ver03.txt"
+    output = "./data/data_offical.txt"
     content = None 
     with open(input,"r") as f:
         content = f.read()
 
     content = normalize_content(content)
 
-    #content = change_teen_code(content)
+    content = change_teen_code(content)
 
     content = remove_emoji(content)
 
     content = remove_other_language(content)
 
-    #content = spelling_correction(content)
+    # word tokenize again.
+    content = content.replace("_"," ").split("\n")
+    
+    result = []
+    for sent in content:
+        words = word_tokenize(sent)
+        words = [x.replace(" ","_") for x in words if x !=""]
+        result.append(" ".join(words))
+
+    result = "\n".join(result)
 
     with open(output,"w") as f:
-        f.write(content)
+        f.write(result)
 
 
 
